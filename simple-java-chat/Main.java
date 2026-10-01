@@ -98,6 +98,7 @@ public class Main {
             case "/", "/index.html" -> "index.html";
             case "/style.css" -> "style.css";
             case "/script.js" -> "script.js";
+            case "/favicon.ico", "/favicon.svg" -> "favicon.svg";
             default -> null;
         };
 
@@ -114,7 +115,11 @@ public class Main {
 
         String contentType = fileName.endsWith(".css")
                 ? "text/css"
-                : fileName.endsWith(".js") ? "text/javascript" : "text/html";
+                : fileName.endsWith(".js")
+                        ? "text/javascript"
+                        : fileName.endsWith(".svg")
+                                ? "image/svg+xml"
+                                : "text/html";
         byte[] content = Files.readAllBytes(file);
         exchange.getResponseHeaders().set("Content-Type", contentType + "; charset=UTF-8");
         exchange.sendResponseHeaders(200, content.length);

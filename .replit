@@ -24,13 +24,13 @@ args = "Simple Java Chat App"
 name = "Simple Java Chat App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd simple-java-chat && javac Main.java && java Main"
-waitForPort = 8000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd simple-java-chat && javac Main.java && PORT=8080 java Main"
+waitForPort = 8080
 
 [agent]
 stack = "PNPM_WORKSPACE"
