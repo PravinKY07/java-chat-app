@@ -1,10 +1,22 @@
 const messageForm = document.querySelector("#message-form");
 const messageInput = document.querySelector("#message-input");
+const senderNameInput = document.querySelector("#sender-name");
 const messageList = document.querySelector("#message-list");
 const sendButton = document.querySelector("#send-button");
 const formStatus = document.querySelector("#form-status");
+let lastMessageSnapshot = null;
+
+function getSenderName() {
+  return senderNameInput.value.trim() || "Guest";
+}
 
 function displayMessages(messages) {
+  const snapshot = JSON.stringify(messages);
+  if (snapshot === lastMessageSnapshot) {
+    return;
+  }
+  lastMessageSnapshot = snapshot;
+
   messageList.replaceChildren();
 
   if (messages.length === 0) {
@@ -17,15 +29,19 @@ function displayMessages(messages) {
 
   messages.forEach((message) => {
     const item = document.createElement("li");
-    item.className = "message-item";
+    const sender = message.sender || "Guest";
+    item.className =
+      sender === getSenderName()
+        ? "message-item"
+        : "message-item message-item--other";
 
     const label = document.createElement("span");
     label.className = "message-label";
-    label.textContent = "You";
+    label.textContent = sender;
 
     const bubble = document.createElement("p");
     bubble.className = "message-bubble";
-    bubble.textContent = message;
+    bubble.textContent = message.text;
 
     item.append(label, bubble);
     messageList.append(item);
@@ -42,6 +58,7 @@ async function loadMessages() {
 
   const messages = await response.json();
   displayMessages(messages);
+  formStatus.textContent = "";
 }
 
 messageForm.addEventListener("submit", async (event) => {
@@ -63,7 +80,7 @@ messageForm.addEventListener("submit", async (event) => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
       },
-      body: new URLSearchParams({ message }),
+      body: new URLSearchParams({ sender: getSenderName(), message }),
     });
 
     const result = await response.json();
@@ -90,3 +107,9 @@ loadMessages().catch((error) => {
       ? error.message
       : "Could not connect to the Java server.";
 });
+
+window.setInterval(() => {
+  loadMessages().catch(() => {
+    formStatus.textContent = "Could not refresh messages. Retrying shortly.";
+  });
+}, 2000);

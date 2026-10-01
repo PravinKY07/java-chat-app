@@ -1,13 +1,13 @@
 # Simple Chat Application
 
-A beginner Java mini project. The HTML, CSS, and JavaScript page sends messages to a small Java HTTP server. The server keeps them in an `ArrayList` while it is running; there is no database or file storage.
+A beginner Java mini project. The HTML, CSS, and JavaScript page sends messages to a small Java HTTP server. Everyone using the same running app shares one chat; pages check for new messages every two seconds. The server keeps messages in an `ArrayList` while it is running; there is no database or file storage.
 
 ## Files
 
 - `Main.java` — starts the Java server and handles the page and message requests.
 - `index.html` — the chat page.
 - `style.css` — the page styling.
-- `script.js` — loads and sends messages using `fetch()`.
+- `script.js` — loads and sends messages using `fetch()` and checks for new messages.
 
 ## Run
 
@@ -25,19 +25,20 @@ Open the web preview to use the chat. The server uses port `8000` by default and
 
 1. The browser loads `index.html`, `style.css`, and `script.js` from the Java server.
 2. When the page opens, JavaScript makes a `GET /messages` request.
-3. Java responds with the messages currently held in its `ArrayList`.
-4. When someone sends a message, JavaScript makes a `POST /messages` request with the message in its form body.
-5. Java adds the message to the `ArrayList` and returns a success response.
-6. JavaScript requests the message list again and displays the updated messages.
+3. Java responds with the messages currently held in its `ArrayList`, including each sender's display name.
+4. Every open page requests the list again every two seconds, so messages from other visitors appear automatically.
+5. When someone sends a message, JavaScript makes a `POST /messages` request with the sender name and message in its form body.
+6. Java adds the message to the shared `ArrayList` and returns a success response.
 
 ### Presentation explanation
 
 - **Frontend:** HTML describes the page, CSS styles it, and JavaScript responds to sending a message and makes HTTP requests with `fetch()`.
 - **Java backend:** `Main.java` starts Java's built-in HTTP server. It serves the page files and handles requests sent to `/messages`.
-- **HTTP POST:** POST sends new information to a server. Here, it sends the message text for Java to store.
+- **HTTP POST:** POST sends new information to a server. Here, it sends the sender's display name and message for Java to store.
 - **ArrayList:** `messages` is a Java list that holds each message in memory as the program runs. It is cleared when the server stops.
 - **HTTP GET:** GET asks the server for information. Here, it returns all messages so the page can display them.
-- **Full flow:** Type a message → click Send → JavaScript sends POST → Java adds it to the ArrayList → JavaScript sends GET → the updated messages appear in the page.
+- **Multiple visitors:** Everyone opening the same running app talks to the same Java server and sees the same in-memory message list. Each page checks for updates every two seconds.
+- **Full flow:** Enter a display name and message → click Send → JavaScript sends POST → Java adds it to the ArrayList → each open page sends GET → the new message appears with its sender's name.
 
 ## Viva questions
 
@@ -61,3 +62,6 @@ Open the web preview to use the chat. The server uses port `8000` by default and
 
 7. **What does JavaScript's `fetch()` do?**  
    It lets the browser send HTTP requests to the Java server and read its responses.
+
+8. **How do messages from another visitor appear?**  
+   Each open page sends a GET request every two seconds and displays the latest shared message list.

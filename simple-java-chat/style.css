@@ -113,10 +113,36 @@ h1 {
 }
 
 .memory-note {
-  margin-left: auto;
+  margin-left: 4px;
   color: #91a09a;
   font-size: 11px;
   font-weight: 450;
+}
+
+.display-name {
+  margin-left: auto;
+}
+
+.display-name input {
+  width: 128px;
+  padding: 8px 10px;
+  border: 1px solid #dce6e1;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #183333;
+  font-size: 12px;
+  font-weight: 450;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.display-name input::placeholder {
+  color: #a1afa9;
+}
+
+.display-name input:focus {
+  border-color: #78ac91;
+  box-shadow: 0 0 0 3px rgb(91 157 120 / 13%);
 }
 
 .message-list {
@@ -156,6 +182,21 @@ h1 {
   font-size: 10px;
   font-weight: 650;
   text-align: right;
+}
+
+.message-item--other {
+  align-self: flex-start;
+}
+
+.message-item--other .message-label {
+  text-align: left;
+}
+
+.message-item--other .message-bubble {
+  border-color: #e4eae7;
+  border-radius: 16px 16px 16px 5px;
+  background: #f2f5f3;
+  color: #354c45;
 }
 
 .message-bubble {
@@ -311,6 +352,10 @@ h1 {
     padding: 14px 20px;
   }
 
+  .display-name input {
+    width: 100px;
+  }
+
   .message-list {
     padding-right: 20px;
     padding-left: 20px;
@@ -337,6 +382,16 @@ h1 {
     gap: 5px;
     margin-right: 20px;
     margin-left: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .memory-note {
+    display: none;
+  }
+
+  .display-name input {
+    width: 92px;
   }
 }
 

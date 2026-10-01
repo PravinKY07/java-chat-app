@@ -20,13 +20,23 @@
           <div>
             <p class="eyebrow">JAVA MINI PROJECT</p>
             <h1 id="page-title">Simple Chat Application</h1>
-            <p class="subtitle">A small chat powered by a Java server.</p>
+            <p class="subtitle">Share the link—messages refresh for everyone.</p>
           </div>
         </header>
 
         <div class="chat-toolbar">
           <span class="status-dot" aria-hidden="true"></span>
-          <span>Chat messages</span>
+          <span>Shared chat</span>
+          <label class="display-name">
+            <span class="visually-hidden">Your display name</span>
+            <input
+              id="sender-name"
+              type="text"
+              maxlength="30"
+              placeholder="Your name"
+              autocomplete="nickname"
+            />
+          </label>
           <span class="memory-note">Messages are temporary</span>
         </div>
 

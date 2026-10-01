@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    private static final List<String> messages = new ArrayList<>();
+    private static final List<ChatMessage> messages = new ArrayList<>();
     private static final Path APP_FOLDER = Path.of(".").toAbsolutePath().normalize();
 
     public static void main(String[] args) throws IOException {
@@ -48,36 +48,55 @@ public class Main {
     }
 
     private static void getMessages(HttpExchange exchange) throws IOException {
-        List<String> savedMessages;
+        List<ChatMessage> savedMessages;
         synchronized (messages) {
             savedMessages = new ArrayList<>(messages);
         }
 
-        List<String> jsonMessages = new ArrayList<>();
-        for (String message : savedMessages) {
-            jsonMessages.add("\"" + escapeJson(message) + "\"");
+        StringBuilder json = new StringBuilder("[");
+        for (int index = 0; index < savedMessages.size(); index++) {
+            ChatMessage message = savedMessages.get(index);
+            if (index > 0) {
+                json.append(",");
+            }
+            json.append("{\"sender\":\"")
+                    .append(escapeJson(message.sender))
+                    .append("\",\"text\":\"")
+                    .append(escapeJson(message.text))
+                    .append("\"}");
         }
+        json.append("]");
 
-        sendResponse(exchange, 200, "[" + String.join(",", jsonMessages) + "]", "application/json");
+        sendResponse(exchange, 200, json.toString(), "application/json");
     }
 
     private static void addMessage(HttpExchange exchange) throws IOException {
         String form = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        String message = readMessageField(form).trim();
+        String sender = readFormField(form, "sender").trim();
+        String message = readFormField(form, "message").trim();
+
+        if (sender.isEmpty()) {
+            sender = "Guest";
+        }
 
         if (message.isEmpty()) {
             sendResponse(exchange, 400, "{\"error\":\"Message cannot be empty.\"}", "application/json");
             return;
         }
 
+        if (sender.length() > 30 || message.length() > 500) {
+            sendResponse(exchange, 400, "{\"error\":\"Name or message is too long.\"}", "application/json");
+            return;
+        }
+
         synchronized (messages) {
-            messages.add(message);
+            messages.add(new ChatMessage(sender, message));
         }
 
         sendResponse(exchange, 201, "{\"success\":true}", "application/json");
     }
 
-    private static String readMessageField(String form) {
+    private static String readFormField(String form, String fieldName) {
         for (String part : form.split("&")) {
             int equalsPosition = part.indexOf('=');
             if (equalsPosition < 0) {
@@ -85,12 +104,22 @@ public class Main {
             }
 
             String name = URLDecoder.decode(part.substring(0, equalsPosition), StandardCharsets.UTF_8);
-            if (name.equals("message")) {
+            if (name.equals(fieldName)) {
                 return URLDecoder.decode(part.substring(equalsPosition + 1), StandardCharsets.UTF_8);
             }
         }
 
         return "";
+    }
+
+    private static class ChatMessage {
+        private final String sender;
+        private final String text;
+
+        private ChatMessage(String sender, String text) {
+            this.sender = sender;
+            this.text = text;
+        }
     }
 
     private static void servePage(HttpExchange exchange, String path) throws IOException {
