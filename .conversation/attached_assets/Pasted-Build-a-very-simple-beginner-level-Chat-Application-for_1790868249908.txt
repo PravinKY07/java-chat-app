@@ -1,0 +1,95 @@
+Build a very simple beginner-level Chat Application for my Java mini project.
+
+IMPORTANT:
+This is an academic mini project for a first-year engineering student. Keep the project extremely simple. Do NOT add advanced features, frameworks, databases, authentication, WebSockets, AI, user accounts, encryption, or complex architecture.
+
+TECH STACK:
+- Frontend: HTML, CSS, JavaScript
+- Backend: Java
+- Use Java as the actual backend, not Node.js or Express.
+- Store messages temporarily in a Java ArrayList (in-memory array/list).
+- No database.
+
+CORE REQUIREMENTS:
+1. Create a simple chat interface.
+2. The UI should contain:
+   - A chat/message area showing all messages.
+   - A text input box.
+   - A "Send" button.
+3. When the user enters a message and clicks Send:
+   - JavaScript should send the message to the Java backend using an HTTP POST request.
+   - The Java backend should receive the message.
+   - Store the message in an ArrayList.
+   - Return a simple success response.
+4. The frontend should then display the sent message in the message list.
+5. Provide a GET endpoint to retrieve all stored messages so that the frontend can load existing messages.
+6. Messages only need to remain while the Java application is running. Do not use a database or file storage.
+
+BACKEND:
+Use a very simple Java HTTP server approach that works reliably on Replit.
+Create a clear Java backend with simple endpoints such as:
+
+POST /messages
+- Receives a message from the frontend.
+- Adds it to an ArrayList.
+- Returns a simple response.
+
+GET /messages
+- Returns all messages stored in the ArrayList.
+
+Keep the Java code easy to understand because I need to explain it to my faculty.
+
+FRONTEND:
+Create:
+- index.html
+- style.css
+- script.js
+
+Use fetch() in JavaScript to communicate with the Java backend.
+
+The frontend should:
+- Load existing messages when the page opens.
+- Send a message using POST /messages.
+- Display messages in the chat area.
+- Clear the input box after sending.
+- Prevent empty messages from being sent.
+
+UI:
+Make the interface clean and simple.
+Use a centered chat box with:
+- Header: "Simple Chat Application"
+- Message display area
+- Input field
+- Send button
+
+Do not make the UI overly fancy. This is a beginner Java mini project, not a production application.
+
+PROJECT STRUCTURE:
+Keep the project structure simple and explain what each file does.
+
+Example:
+- Main.java → Java backend/server
+- index.html → chat interface
+- style.css → basic styling
+- script.js → frontend logic and API calls
+
+REPLIT REQUIREMENTS:
+- Make sure the application runs directly on Replit.
+- Configure the run command correctly.
+- The frontend and backend should work together without requiring complicated setup.
+- Use one Java server to serve the frontend and handle the API endpoints if that is the simplest approach.
+- Avoid unnecessary dependencies wherever possible.
+
+FACULTY PRESENTATION:
+After building the application, provide a short explanation of:
+1. How the frontend works.
+2. How Java works as the backend.
+3. What an HTTP POST request does in this project.
+4. How the ArrayList stores messages.
+5. How GET retrieves messages.
+6. The flow from entering a message → clicking Send → Java backend → ArrayList → displaying the message.
+
+Also provide 5-7 simple viva questions with answers that my faculty might ask about this project.
+
+MOST IMPORTANT:
+Keep everything beginner-level and understandable. Do not over-engineer the project. The main purpose is to demonstrate basic HTML/CSS/JavaScript frontend communication with a Java backend using GET and POST requests and an in-memory ArrayList.

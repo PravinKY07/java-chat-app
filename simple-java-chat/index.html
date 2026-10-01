@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A beginner-friendly chat application with a Java backend."
+    />
+    <title>Simple Chat Application</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/script.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <section class="chat-card" aria-labelledby="page-title">
+        <header class="chat-header">
+          <div class="app-mark" aria-hidden="true">SC</div>
+          <div>
+            <p class="eyebrow">JAVA MINI PROJECT</p>
+            <h1 id="page-title">Simple Chat Application</h1>
+            <p class="subtitle">A small chat powered by a Java server.</p>
+          </div>
+        </header>
+
+        <div class="chat-toolbar">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>Chat messages</span>
+          <span class="memory-note">Messages are temporary</span>
+        </div>
+
+        <ol
+          id="message-list"
+          class="message-list"
+          aria-label="Chat messages"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
+          <li class="empty-state">No messages yet. Send the first one.</li>
+        </ol>
+
+        <form id="message-form" class="message-form">
+          <label class="visually-hidden" for="message-input">Your message</label>
+          <input
+            id="message-input"
+            name="message"
+            type="text"
+            maxlength="500"
+            placeholder="Write a message..."
+            autocomplete="off"
+            required
+          />
+          <button id="send-button" type="submit">
+            <span>Send</span>
+            <span class="send-arrow" aria-hidden="true">→</span>
+          </button>
+        </form>
+        <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+
+        <footer class="chat-footer">
+          <span>Built with HTML, CSS, JavaScript &amp; Java</span>
+          <span>Stored only while the server runs</span>
+        </footer>
+      </section>
+      <p class="page-note">A beginner project demonstrating HTTP GET and POST.</p>
+    </main>
+  </body>
+</html>
