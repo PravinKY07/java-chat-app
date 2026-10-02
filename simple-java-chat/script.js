@@ -1,3 +1,12 @@
+const PASSWORD_STORAGE_KEY = "chat-password";
+const PASSWORD_HEADER = "X-Chat-Password";
+
+const passwordForm = document.querySelector("#password-form");
+const passwordInput = document.querySelector("#password-input");
+const passwordButton = document.querySelector("#password-button");
+const passwordStatus = document.querySelector("#password-status");
+const chatPanel = document.querySelector("#chat-panel");
+
 const messageForm = document.querySelector("#message-form");
 const messageInput = document.querySelector("#message-input");
 const senderNameInput = document.querySelector("#sender-name");
@@ -69,14 +78,96 @@ function displayMessages(messages) {
   messageList.scrollTop = messageList.scrollHeight;
 }
 
+function getStoredPassword() {
+  try {
+    return window.sessionStorage.getItem(PASSWORD_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function storePassword(password) {
+  try {
+    if (password) {
+      window.sessionStorage.setItem(PASSWORD_STORAGE_KEY, password);
+    } else {
+      window.sessionStorage.removeItem(PASSWORD_STORAGE_KEY);
+    }
+  } catch {
+    // Storage can be unavailable in private browsing; the chat still works.
+  }
+}
+
+function showChat() {
+  passwordForm.hidden = true;
+  chatPanel.hidden = false;
+  messageInput.focus();
+}
+
+function showPasswordGate(message) {
+  passwordForm.hidden = false;
+  chatPanel.hidden = true;
+  passwordStatus.textContent = message || "";
+  passwordInput.value = "";
+  passwordInput.focus();
+}
+
+passwordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const password = passwordInput.value;
+  passwordButton.disabled = true;
+  passwordStatus.textContent = "Checking...";
+
+  try {
+    const response = await fetch("/messages", {
+      headers: { [PASSWORD_HEADER]: password },
+    });
+
+    if (response.status === 429) {
+      passwordStatus.textContent = "Too many failed attempts. Wait a minute and try again.";
+      return;
+    }
+    if (!response.ok) {
+      passwordStatus.textContent = "That password is not correct.";
+      return;
+    }
+
+    storePassword(password);
+    showChat();
+    await loadMessages();
+  } catch {
+    passwordStatus.textContent = "Could not reach the chat server.";
+  } finally {
+    passwordButton.disabled = false;
+  }
+});
+
 async function loadMessages() {
   if (isPolling) {
+    return;
+  }
+  const password = getStoredPassword();
+  if (!password) {
+    showPasswordGate();
     return;
   }
   isPolling = true;
 
   try {
-    const response = await fetch("/messages");
+    const response = await fetch("/messages", {
+      headers: { [PASSWORD_HEADER]: password },
+    });
+
+    if (response.status === 401) {
+      storePassword("");
+      showPasswordGate("Your session was not accepted. Enter the password again.");
+      return;
+    }
+    if (response.status === 429) {
+      showPasswordGate("Too many failed attempts. Wait a minute and try again.");
+      return;
+    }
     if (!response.ok) {
       throw new Error("Could not load messages from the Java server.");
     }
@@ -112,9 +203,16 @@ messageForm.addEventListener("submit", async (event) => {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        [PASSWORD_HEADER]: getStoredPassword(),
       },
       body: new URLSearchParams({ sender: getSenderName(), message }),
     });
+
+    if (response.status === 401 || response.status === 429) {
+      storePassword("");
+      showPasswordGate("Your session was not accepted. Enter the password again.");
+      return;
+    }
 
     const result = await response.json();
     if (!response.ok) {
@@ -143,6 +241,9 @@ loadMessages().catch((error) => {
 });
 
 window.setInterval(() => {
+  if (!getStoredPassword()) {
+    return;
+  }
   loadMessages().catch(() => {
     formStatus.textContent = "Could not refresh messages. Retrying shortly.";
   });

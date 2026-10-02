@@ -8,8 +8,11 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 public class Main {
@@ -22,7 +25,26 @@ public class Main {
     private static final int MAX_MESSAGE_LENGTH = 500;
     private static final int MAX_BODY_BYTES = 64 * 1024;
 
+    private static final String PASSWORD_HEADER = "X-Chat-Password";
+    private static final String PASSWORD_ENVIRONMENT_VARIABLE = "CHAT_PASSWORD";
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final long LOCKOUT_MILLIS = 60_000L;
+
+    private static byte[] chatPassword;
+    private static final Map<String, Attempt> failedAttempts = new ConcurrentHashMap<>();
+
     public static void main(String[] args) throws IOException {
+        String configuredPassword = System.getenv(PASSWORD_ENVIRONMENT_VARIABLE);
+        if (configuredPassword == null || configuredPassword.isEmpty()) {
+            System.out.println(
+                    "The " + PASSWORD_ENVIRONMENT_VARIABLE + " environment variable is not set."
+                            + " Set it to the chat password and start the server again."
+            );
+            System.exit(1);
+            return;
+        }
+        chatPassword = configuredPassword.getBytes(StandardCharsets.UTF_8);
+
         int port = readPort();
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
         server.setExecutor(Executors.newFixedThreadPool(10));
@@ -54,6 +76,10 @@ public class Main {
         String method = exchange.getRequestMethod();
 
         if (path.equals("/messages")) {
+            if (!isAuthorized(exchange)) {
+                return;
+            }
+
             if (method.equals("GET")) {
                 getMessages(exchange);
             } else if (method.equals("POST")) {
@@ -71,6 +97,51 @@ public class Main {
         }
 
         sendResponse(exchange, 405, "Method not allowed.", "text/plain");
+    }
+
+    private static boolean isAuthorized(HttpExchange exchange) throws IOException {
+        String clientAddress = exchange.getRemoteAddress().getAddress().getHostAddress();
+        long now = System.currentTimeMillis();
+
+        Attempt attempt = failedAttempts.get(clientAddress);
+        boolean withinCooldown = attempt != null && now - attempt.lastFailureAt < LOCKOUT_MILLIS;
+        if (withinCooldown && attempt.failures >= MAX_FAILED_ATTEMPTS) {
+            sendResponse(
+                    exchange,
+                    429,
+                    "{\"error\":\"Too many failed attempts. Try again in a moment.\"}",
+                    "application/json"
+            );
+            return false;
+        }
+
+        String suppliedPassword = exchange.getRequestHeaders().getFirst(PASSWORD_HEADER);
+        boolean passwordMatches = suppliedPassword != null
+                && MessageDigest.isEqual(
+                        suppliedPassword.getBytes(StandardCharsets.UTF_8),
+                        chatPassword
+                );
+
+        if (passwordMatches) {
+            failedAttempts.remove(clientAddress);
+            return true;
+        }
+
+        int failures = withinCooldown ? attempt.failures + 1 : 1;
+        failedAttempts.put(clientAddress, new Attempt(failures, now));
+        exchange.getResponseHeaders().set("WWW-Authenticate", "ChatPassword");
+        sendResponse(exchange, 401, "{\"error\":\"Incorrect password.\"}", "application/json");
+        return false;
+    }
+
+    private static class Attempt {
+        private final int failures;
+        private final long lastFailureAt;
+
+        private Attempt(int failures, long lastFailureAt) {
+            this.failures = failures;
+            this.lastFailureAt = lastFailureAt;
+        }
     }
 
     private static void getMessages(HttpExchange exchange) throws IOException {

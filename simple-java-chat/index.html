@@ -24,6 +24,25 @@
           </div>
         </header>
 
+        <form id="password-form" class="password-form">
+          <h2 class="password-title">This chat is private</h2>
+          <p class="password-subtitle">Enter the chat password to join.</p>
+          <label class="visually-hidden" for="password-input">Chat password</label>
+          <input
+            id="password-input"
+            type="password"
+            placeholder="Chat password"
+            autocomplete="current-password"
+            required
+          />
+          <button id="password-button" type="submit">
+            <span>Unlock</span>
+            <span class="send-arrow" aria-hidden="true">→</span>
+          </button>
+          <p id="password-status" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <div id="chat-panel" hidden>
         <div class="chat-toolbar">
           <span class="status-dot" aria-hidden="true"></span>
           <span>Shared chat</span>
@@ -67,6 +86,7 @@
           <span>Built with HTML, CSS, JavaScript &amp; Java</span>
           <span>Stored only while the server runs</span>
         </footer>
+        </div>
       </section>
       <p class="page-note">A beginner project demonstrating HTTP GET and POST.</p>
     </main>
