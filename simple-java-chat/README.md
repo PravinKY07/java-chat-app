@@ -8,6 +8,7 @@ A beginner Java mini project. The HTML, CSS, and JavaScript page sends messages 
 - `index.html` — the chat page.
 - `style.css` — the page styling.
 - `script.js` — loads and sends messages using `fetch()` and checks for new messages.
+- `Dockerfile` — builds the app into a Java 21 image for deployment.
 
 ## Run
 
@@ -25,17 +26,20 @@ The server keeps only the **500 most recent** messages in memory, and requests t
 
 ## Deploy on Render
 
-Render runs Java natively, so the app needs no changes to deploy.
+Live at <https://java-chat-app-oin1.onrender.com>.
+
+Render has no native Java runtime — the language dropdown offers Node, Bun, Python, Ruby, Go, Rust, Elixir, and Docker. So this app deploys through the `Dockerfile` in this folder, which compiles `Main.java` in a Java 21 image and starts it.
 
 1. Push this repository to GitHub.
 2. In Render, choose **New → Web Service** and connect the GitHub repository.
-3. Set the root directory to `simple-java-chat`.
-4. Fill in the commands:
-   - **Build Command:** `javac Main.java`
-   - **Start Command:** `java Main`
-5. Choose a free instance type and deploy.
+3. Set **Root Directory** to `simple-java-chat`.
+4. Set **Dockerfile Path** to `Dockerfile`.
+5. Leave **Build Command** and **Start Command** empty — the Dockerfile's `CMD ["java", "Main"]` runs the app.
+6. Choose a free instance type and deploy.
 
-Render sets the `PORT` environment variable automatically, and the Java server reads it. Messages are shared by everyone using the same deployment and are cleared whenever the server restarts.
+The Root Directory and Dockerfile Path together have to resolve to `simple-java-chat/Dockerfile`. Render concatenates the two values, so setting Root Directory to `simple-java-chat` *and* Dockerfile Path to `simple-java-chat/Dockerfile` fails the build.
+
+Render sets the `PORT` environment variable automatically and the Java server reads it. Messages are shared by everyone using the same deployment and are cleared whenever the server restarts — including when the free instance spins down after inactivity.
 
 ## How the project works
 
@@ -68,7 +72,7 @@ Render sets the `PORT` environment variable automatically, and the Java server r
    It sends a new message from the browser to the Java server.
 
 4. **What is an `ArrayList`?**  
-   It is a Java collection that can hold a list of items. This project uses one to hold chat messages.
+   It is a Java collection that can hold a list of items. This project uses one to hold chat messages, capped at the 500 most recent so memory stays bounded.
 
 5. **What does the GET endpoint return?**  
    `GET /messages` returns every message currently stored in the list.
