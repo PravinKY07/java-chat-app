@@ -2,6 +2,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -9,18 +10,43 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class Main {
     private static final List<ChatMessage> messages = new ArrayList<>();
     private static final Path APP_FOLDER = Path.of(".").toAbsolutePath().normalize();
 
+    private static final int DEFAULT_PORT = 8000;
+    private static final int MAX_MESSAGES = 500;
+    private static final int MAX_NAME_LENGTH = 30;
+    private static final int MAX_MESSAGE_LENGTH = 500;
+    private static final int MAX_BODY_BYTES = 64 * 1024;
+
     public static void main(String[] args) throws IOException {
-        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8000"));
+        int port = readPort();
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+        server.setExecutor(Executors.newFixedThreadPool(10));
         server.createContext("/", Main::handleRequest);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(0)));
         server.start();
 
         System.out.println("Simple Chat Application is running on port " + port);
+    }
+
+    private static int readPort() {
+        String configuredPort = System.getenv("PORT");
+        if (configuredPort == null || configuredPort.isBlank()) {
+            return DEFAULT_PORT;
+        }
+
+        try {
+            int port = Integer.parseInt(configuredPort.trim());
+            return port > 0 && port <= 65535 ? port : DEFAULT_PORT;
+        } catch (NumberFormatException exception) {
+            System.out.println("PORT \"" + configuredPort + "\" is not a valid port, using " + DEFAULT_PORT);
+            return DEFAULT_PORT;
+        }
     }
 
     private static void handleRequest(HttpExchange exchange) throws IOException {
@@ -71,7 +97,14 @@ public class Main {
     }
 
     private static void addMessage(HttpExchange exchange) throws IOException {
-        String form = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        String form;
+        try {
+            form = readLimitedBody(exchange);
+        } catch (RequestTooLargeException exception) {
+            sendResponse(exchange, 413, "{\"error\":\"Message is too large.\"}", "application/json");
+            return;
+        }
+
         String sender = readFormField(form, "sender").trim();
         String message = readFormField(form, "message").trim();
 
@@ -84,16 +117,34 @@ public class Main {
             return;
         }
 
-        if (sender.length() > 30 || message.length() > 500) {
+        if (sender.length() > MAX_NAME_LENGTH || message.length() > MAX_MESSAGE_LENGTH) {
             sendResponse(exchange, 400, "{\"error\":\"Name or message is too long.\"}", "application/json");
             return;
         }
 
         synchronized (messages) {
             messages.add(new ChatMessage(sender, message));
+            while (messages.size() > MAX_MESSAGES) {
+                messages.remove(0);
+            }
         }
 
         sendResponse(exchange, 201, "{\"success\":true}", "application/json");
+    }
+
+    private static String readLimitedBody(HttpExchange exchange)
+            throws IOException, RequestTooLargeException {
+        try (InputStream body = exchange.getRequestBody()) {
+            byte[] content = body.readNBytes(MAX_BODY_BYTES + 1);
+            if (content.length > MAX_BODY_BYTES) {
+                throw new RequestTooLargeException();
+            }
+            return new String(content, StandardCharsets.UTF_8);
+        }
+    }
+
+    private static class RequestTooLargeException extends Exception {
+        private static final long serialVersionUID = 1L;
     }
 
     private static String readFormField(String form, String fieldName) {

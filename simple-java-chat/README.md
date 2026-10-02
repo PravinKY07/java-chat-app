@@ -1,6 +1,6 @@
 # Simple Chat Application
 
-A beginner Java mini project. The HTML, CSS, and JavaScript page sends messages to a small Java HTTP server. Everyone using the same running app shares one chat; pages check for new messages every two seconds. The server keeps messages in an `ArrayList` while it is running; there is no database or file storage.
+A beginner Java mini project. The HTML, CSS, and JavaScript page sends messages to a small Java HTTP server. Everyone using the same running app shares one chat; pages check for new messages every two seconds. The server keeps the 500 most recent messages in an `ArrayList` while it is running; there is no database or file storage.
 
 ## Files
 
@@ -11,7 +11,7 @@ A beginner Java mini project. The HTML, CSS, and JavaScript page sends messages 
 
 ## Run
 
-In the Replit Shell:
+Locally:
 
 ```sh
 cd simple-java-chat
@@ -19,7 +19,23 @@ javac Main.java
 java Main
 ```
 
-Open the web preview to use the chat. The server uses port `8000` by default and reads Replit's `PORT` setting when it is provided.
+Then open <http://localhost:8000> in a browser. The server uses port `8000` by default and reads the `PORT` environment variable when one is set. If `PORT` is not a valid port number, it falls back to `8000` instead of failing to start.
+
+The server keeps only the **500 most recent** messages in memory, and requests to `/messages` are handled on a thread pool so one slow request cannot block the whole chat.
+
+## Deploy on Render
+
+Render runs Java natively, so the app needs no changes to deploy.
+
+1. Push this repository to GitHub.
+2. In Render, choose **New → Web Service** and connect the GitHub repository.
+3. Set the root directory to `simple-java-chat`.
+4. Fill in the commands:
+   - **Build Command:** `javac Main.java`
+   - **Start Command:** `java Main`
+5. Choose a free instance type and deploy.
+
+Render sets the `PORT` environment variable automatically, and the Java server reads it. Messages are shared by everyone using the same deployment and are cleared whenever the server restarts.
 
 ## How the project works
 

@@ -40,15 +40,10 @@
           <span class="memory-note">Messages are temporary</span>
         </div>
 
-        <ol
-          id="message-list"
-          class="message-list"
-          aria-label="Chat messages"
-          aria-live="polite"
-          aria-relevant="additions"
-        >
+        <ol id="message-list" class="message-list" aria-label="Chat messages">
           <li class="empty-state">No messages yet. Send the first one.</li>
         </ol>
+        <p id="message-announcer" class="visually-hidden" role="status" aria-live="polite"></p>
 
         <form id="message-form" class="message-form">
           <label class="visually-hidden" for="message-input">Your message</label>

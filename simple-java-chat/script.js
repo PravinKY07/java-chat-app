@@ -4,18 +4,24 @@ const senderNameInput = document.querySelector("#sender-name");
 const messageList = document.querySelector("#message-list");
 const sendButton = document.querySelector("#send-button");
 const formStatus = document.querySelector("#form-status");
+const messageAnnouncer = document.querySelector("#message-announcer");
 let lastMessageSnapshot = null;
+let lastRenderedSenderName = null;
+let lastAnnouncedKey = null;
+let isPolling = false;
 
 function getSenderName() {
   return senderNameInput.value.trim() || "Guest";
 }
 
 function displayMessages(messages) {
-  const snapshot = JSON.stringify(messages);
+  const senderName = getSenderName();
+  const snapshot = JSON.stringify(messages) + "|" + senderName;
   if (snapshot === lastMessageSnapshot) {
     return;
   }
   lastMessageSnapshot = snapshot;
+  lastRenderedSenderName = senderName;
 
   messageList.replaceChildren();
 
@@ -24,6 +30,7 @@ function displayMessages(messages) {
     emptyMessage.className = "empty-state";
     emptyMessage.textContent = "No messages yet. Send the first one.";
     messageList.append(emptyMessage);
+    lastAnnouncedKey = null;
     return;
   }
 
@@ -31,7 +38,7 @@ function displayMessages(messages) {
     const item = document.createElement("li");
     const sender = message.sender || "Guest";
     item.className =
-      sender === getSenderName()
+      sender === senderName
         ? "message-item"
         : "message-item message-item--other";
 
@@ -47,19 +54,45 @@ function displayMessages(messages) {
     messageList.append(item);
   });
 
+  const newest = messages[messages.length - 1];
+  const newestSender = newest.sender || "Guest";
+  const newestKey = newestSender.length + ":" + newestSender + newest.text;
+
+  if (lastAnnouncedKey === null) {
+    // First render of existing history: record it without announcing.
+    lastAnnouncedKey = newestKey;
+  } else if (newestKey !== lastAnnouncedKey) {
+    messageAnnouncer.textContent = `New message from ${newest.sender || "Guest"}`;
+    lastAnnouncedKey = newestKey;
+  }
+
   messageList.scrollTop = messageList.scrollHeight;
 }
 
 async function loadMessages() {
-  const response = await fetch("/messages");
-  if (!response.ok) {
-    throw new Error("Could not load messages from the Java server.");
+  if (isPolling) {
+    return;
   }
+  isPolling = true;
 
-  const messages = await response.json();
-  displayMessages(messages);
-  formStatus.textContent = "";
+  try {
+    const response = await fetch("/messages");
+    if (!response.ok) {
+      throw new Error("Could not load messages from the Java server.");
+    }
+
+    const messages = await response.json();
+    displayMessages(messages);
+  } finally {
+    isPolling = false;
+  }
 }
+
+senderNameInput.addEventListener("input", () => {
+  if (getSenderName() !== lastRenderedSenderName) {
+    loadMessages().catch(() => {});
+  }
+});
 
 messageForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -89,6 +122,7 @@ messageForm.addEventListener("submit", async (event) => {
     }
 
     messageInput.value = "";
+    formStatus.textContent = "";
     await loadMessages();
     messageInput.focus();
   } catch (error) {
