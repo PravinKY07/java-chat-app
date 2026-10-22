@@ -16,53 +16,24 @@
     <main class="page">
       <section class="chat-card" aria-labelledby="page-title">
         <header class="chat-header">
-          <div class="app-mark" aria-hidden="true">SC</div>
-          <div>
-            <p class="eyebrow">JAVA MINI PROJECT</p>
-            <h1 id="page-title">Simple Chat Application</h1>
-            <p class="subtitle">Share the link—messages refresh for everyone.</p>
-          </div>
+          <h1 id="page-title">Simple Chat Application</h1>
+          <p class="subtitle">Share the link. Everyone sees the same messages.</p>
         </header>
 
-        <form id="password-form" class="password-form">
-          <h2 class="password-title">This chat is private</h2>
-          <p class="password-subtitle">Enter the chat password to join.</p>
-          <label class="visually-hidden" for="password-input">Chat password</label>
-          <input
-            id="password-input"
-            type="password"
-            placeholder="Chat password"
-            autocomplete="current-password"
-            required
-          />
-          <button id="password-button" type="submit">
-            <span>Unlock</span>
-            <span class="send-arrow" aria-hidden="true">→</span>
-          </button>
-          <p id="password-status" class="form-status" role="status" aria-live="polite"></p>
-        </form>
-
-        <div id="chat-panel" hidden>
         <div class="chat-toolbar">
-          <span class="status-dot" aria-hidden="true"></span>
-          <span>Shared chat</span>
-          <label class="display-name">
-            <span class="visually-hidden">Your display name</span>
-            <input
-              id="sender-name"
-              type="text"
-              maxlength="30"
-              placeholder="Your name"
-              autocomplete="nickname"
-            />
-          </label>
-          <span class="memory-note">Messages are temporary</span>
+          <label class="display-name" for="sender-name">Your name</label>
+          <input
+            id="sender-name"
+            type="text"
+            maxlength="30"
+            placeholder="Guest"
+            autocomplete="nickname"
+          />
         </div>
 
         <ol id="message-list" class="message-list" aria-label="Chat messages">
           <li class="empty-state">No messages yet. Send the first one.</li>
         </ol>
-        <p id="message-announcer" class="visually-hidden" role="status" aria-live="polite"></p>
 
         <form id="message-form" class="message-form">
           <label class="visually-hidden" for="message-input">Your message</label>
@@ -75,20 +46,10 @@
             autocomplete="off"
             required
           />
-          <button id="send-button" type="submit">
-            <span>Send</span>
-            <span class="send-arrow" aria-hidden="true">→</span>
-          </button>
+          <button id="send-button" type="submit">Send</button>
         </form>
         <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
-
-        <footer class="chat-footer">
-          <span>Built with HTML, CSS, JavaScript &amp; Java</span>
-          <span>Stored only while the server runs</span>
-        </footer>
-        </div>
       </section>
-      <p class="page-note">A beginner project demonstrating HTTP GET and POST.</p>
     </main>
   </body>
 </html>

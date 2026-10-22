@@ -68,7 +68,8 @@ java Main
 ```
 
 Open <http://localhost:8000>. The server reads the `PORT` environment
-variable when one is set, and falls back to `8000` otherwise.
+variable when one is set, and falls back to `8000` otherwise. No other
+environment variables are needed.
 
 ## API
 
@@ -77,7 +78,6 @@ variable when one is set, and falls back to `8000` otherwise.
 | `GET` | `/messages` | `200` — JSON array of `{sender, text}` |
 | `POST` | `/messages` | `201` — `{"success":true}` |
 | `POST` | `/messages` | `400` — empty message, or name over 30 / message over 500 characters |
-| `POST` | `/messages` | `413` — request body over 64KB |
 
 ## Deploy
 
@@ -107,5 +107,7 @@ questions.
   roughly 15 minutes of inactivity, so the first request after that can
   take 30–60 seconds to wake. Messages are cleared on each restart.
 - **Single shared chat.** Everyone using one deployment sees the same list.
+- **No login.** The chat is public, so anyone with the link can read and
+  post messages.
 - Messages are escaped before being placed in JSON, so quotes, newlines,
   and backslashes render correctly.
